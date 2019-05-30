@@ -31,6 +31,9 @@ ALLOWED_HOSTS = []
 # Application definition
 
 INSTALLED_APPS = [
+    'polls.apps.PollsConfig',
+    'securitye.apps.SecurityeConfig',
+    'ctos.apps.CtosConfig',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -75,12 +78,33 @@ WSGI_APPLICATION = 'anbao.wsgi.application'
 # https://docs.djangoproject.com/en/2.2/ref/settings/#databases
 
 DATABASES = {
+    'oracle': {
+        'ENGINE': 'django.db.backends.oracle',
+        'NAME': 'bmtest1',
+        'USER': 'ctos',
+        'PASSWORD': 'www',
+        'HOST': '10.2.3.99',
+        'PORT': '1521'
+    },
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
+        'ENGINE': 'django.db.backends.mysql',
+        'NAME': 'abtruck',
+        'USER': 'root',
+        'PASSWORD': '3362462',
+        'HOST': '127.0.0.1',
+        'PORT': '3306'
     }
 }
 
+DATABASE_ROUTERS = ['anbao.database_router.DatabaseAppsRouter']
+
+DATABASE_APPS_MAPPING = {
+    # example:
+    # 'app_name':'database_name',
+    'polls': 'default',
+    'securitye': 'default',
+    'ctos': 'oracle'
+}
 
 # Password validation
 # https://docs.djangoproject.com/en/2.2/ref/settings/#auth-password-validators
@@ -106,7 +130,7 @@ AUTH_PASSWORD_VALIDATORS = [
 
 LANGUAGE_CODE = 'en-us'
 
-TIME_ZONE = 'UTC'
+TIME_ZONE = 'Asia/Shanghai'
 
 USE_I18N = True
 
