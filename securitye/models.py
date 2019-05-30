@@ -3,14 +3,14 @@ from django.db import models
 # Create your models here.
 
 
-class CarModel(models):
+class CarModel(models.Model):
     driverType = models.CharField(max_length=3, primary_key=True, verbose_name='准驾类型')
     desc = models.CharField(max_length=20, verbose_name='描述')
 
 
-class Driver(models):
+class Driver(models.Model):
     driverName = models.CharField(max_length=15, blank=False, verbose_name='司机姓名')
-    driverType = models.ForeignKey(CarModel)
+    driverType = models.ForeignKey(CarModel, on_delete=models.CASCADE)
     telPhone = models.CharField(max_length=20, verbose_name='司机电话')
     idCardNO = models.CharField(max_length=20, blank=False, verbose_name='身份证号码')
     jobCardStartDate = models.DateField(verbose_name='从业资格证有效期')
@@ -29,7 +29,7 @@ class Driver(models):
     illegalCount = models.IntegerField(verbose_name='违章次数')
 
 
-class OutMan(models):
+class OutMan(models.Model):
     cname = models.CharField(max_length=15, blank=False, verbose_name='姓 名')
     sex = models.CharField(max_length=2, verbose_name='性别')
     cardID = models.CharField(max_length=20, verbose_name='身份证号码')
@@ -46,7 +46,7 @@ class OutMan(models):
     bakMsg = models.TextField(max_length=100, verbose_name='备注')
 
 
-class OutCar(models):
+class OutCar(models.Model):
     truckNO = models.CharField(max_length=15, verbose_name='车牌号')
     driverName = models.CharField(max_length=15, verbose_name='驾驶者姓名')
     sex = models.CharField(max_length=2, verbose_name='性别')
@@ -66,7 +66,7 @@ class OutCar(models):
     bakMsg = models.TextField(verbose_name='备注')
 
 
-class Illegal(models):
+class Illegal(models.Model):
     illegalDate = models.DateField(verbose_name='违章日期')
     illegalAttribute = models.CharField(max_length=15, verbose_name='违章性质')
     illegalCode = models.CharField(max_length=15, verbose_name='违章代码')
@@ -81,13 +81,13 @@ class Illegal(models):
     bakMsg = models.TextField(verbose_name='备 注')
 
 
-class IllegalImage(models):
+class IllegalImage(models.Model):
     illegal = models.ForeignKey(Illegal, on_delete=models.CASCADE, verbose_name='IllegalID')
     image = models.ImageField()
     cTime = models.DateField(auto_now_add=True, verbose_name='图片日期')
 
 
-class DriverTran(models):
+class DriverTran(models.Model):
     driver = models.ForeignKey(Driver, on_delete=models.CASCADE)
     status = models.TextField(verbose_name='培训情况')
     recordMan = models.CharField(max_length=20, verbose_name='记录人')
@@ -97,7 +97,7 @@ class DriverTran(models):
     isOn = models.CharField(default='Y', max_length=1, verbose_name='是否有效')
 
 
-class OutCarTran(models):
+class OutCarTran(models.Model):
     driver = models.ForeignKey(OutCar, on_delete=models.CASCADE)
     status = models.TextField(verbose_name='培训情况')
     recordMan = models.CharField(max_length=20, verbose_name='记录人')
@@ -107,7 +107,7 @@ class OutCarTran(models):
     isOn = models.CharField(default='Y', max_length=1, verbose_name='是否有效')
 
 
-class DriverTest(models):
+class DriverTest(models.Model):
     driver = models.ForeignKey(Driver, on_delete=models.CASCADE)
     testScore = models.FloatField(verbose_name='考试成绩')
     testDate = models.DateTimeField(verbose_name='记录时间')
@@ -118,7 +118,7 @@ class DriverTest(models):
     isOn = models.CharField(default='Y', max_length=1, verbose_name='是否有效')
 
 
-class DriverLearnCard(models):
+class DriverLearnCard(models.Model):
     driver = models.ForeignKey(Driver, on_delete=models.CASCADE)
     startTime = models.DateField(verbose_name='开始有效期')
     endTime = models.DateField(verbose_name='结束有效期')
@@ -129,7 +129,7 @@ class DriverLearnCard(models):
     isOn = models.CharField(default='Y', max_length=1, verbose_name='是否有效')
 
 
-class DriverTempInCard(models):
+class DriverTempInCard(models.Model):
     driver = models.ForeignKey(Driver, on_delete=models.CASCADE)
     startTime = models.DateField(verbose_name='开始有效期')
     endTime = models.DateField(verbose_name='结束有效期')
@@ -140,7 +140,7 @@ class DriverTempInCard(models):
     isOn = models.CharField(default='Y', max_length=1, verbose_name='是否有效')
 
 
-class DriverLongInCard(models):
+class DriverLongInCard(models.Model):
     driver = models.ForeignKey(Driver, on_delete=models.CASCADE)
     startTime = models.DateField(verbose_name='开始有效期')
     endTime = models.DateField(verbose_name='结束有效期')
@@ -151,7 +151,7 @@ class DriverLongInCard(models):
     isOn = models.CharField(default='Y', max_length=1, verbose_name='是否有效')
 
 
-class OutCarCard(models):
+class OutCarCard(models.Model):
     carID = models.ForeignKey(OutCar, on_delete=models.CASCADE)
     startTime = models.DateField(verbose_name='开始有效期')
     endTime = models.DateField(verbose_name='结束有效期')
@@ -162,7 +162,7 @@ class OutCarCard(models):
     isOn = models.CharField(default='Y', max_length=1, verbose_name='是否有效')
 
 
-class OutManCard(models):
+class OutManCard(models.Model):
     manID = models.ForeignKey(OutMan, on_delete=models.CASCADE)
     startTime = models.DateField(verbose_name='开始有效期')
     endTime = models.DateField(verbose_name='结束有效期')
@@ -173,19 +173,19 @@ class OutManCard(models):
     isOn = models.CharField(default='Y', max_length=1, verbose_name='是否有效')
 
 
-class IllegalAttribute(models):
+class IllegalAttribute(models.Model):
     illegalAttribute = models.CharField(max_length=15, verbose_name='违章性质', unique=True)
 
 
-class ResDept(models):
+class ResDept(models.Model):
     resDept = models.CharField(max_length=120, verbose_name='责任部门(或公司)', unique=True)
 
 
-class ResGroup(models):
+class ResGroup(models.Model):
     resGroup = models.CharField(max_length=120, verbose_name='班组', unique=True)
 
 
-class CheckMan(models):
+class CheckMan(models.Model):
     checkMan = models.CharField(max_length=120, verbose_name='查处人', unique=True)
 
 
