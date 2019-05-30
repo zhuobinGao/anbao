@@ -78,6 +78,14 @@ WSGI_APPLICATION = 'anbao.wsgi.application'
 # https://docs.djangoproject.com/en/2.2/ref/settings/#databases
 
 DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.mysql',
+        'NAME': 'abtruck',
+        'USER': 'root',
+        'PASSWORD': '3362462',
+        'HOST': '127.0.0.1',
+        'PORT': '3306'
+    },
     'oracle': {
         'ENGINE': 'django.db.backends.oracle',
         'NAME': 'bmtest1',
@@ -86,14 +94,7 @@ DATABASES = {
         'HOST': '10.2.3.99',
         'PORT': '1521'
     },
-    'default': {
-        'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'abtruck',
-        'USER': 'root',
-        'PASSWORD': '3362462',
-        'HOST': '127.0.0.1',
-        'PORT': '3306'
-    }
+
 }
 
 DATABASE_ROUTERS = ['anbao.database_router.DatabaseAppsRouter']
