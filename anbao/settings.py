@@ -86,26 +86,26 @@ DATABASES = {
         'HOST': '127.0.0.1',
         'PORT': '3306'
     },
-    'oracle': {
-        'ENGINE': 'django.db.backends.oracle',
-        'NAME': 'bmtest1',
-        'USER': 'ctos',
-        'PASSWORD': 'www',
-        'HOST': '10.2.3.99',
-        'PORT': '1521'
-    },
+    # 'oracle': {
+    #     'ENGINE': 'django.db.backends.oracle',
+    #     'NAME': 'bmtest1',
+    #     'USER': 'ctos',
+    #     'PASSWORD': 'www',
+    #     'HOST': '10.2.3.99',
+    #     'PORT': '1521'
+    # },
 
 }
 
-DATABASE_ROUTERS = ['anbao.database_router.DatabaseAppsRouter']
-
-DATABASE_APPS_MAPPING = {
-    # example:
-    # 'app_name':'database_name',
-    'polls': 'default',
-    'securitye': 'default',
-    'ctos': 'oracle'
-}
+# DATABASE_ROUTERS = ['anbao.database_router.DatabaseAppsRouter']
+#
+# DATABASE_APPS_MAPPING = {
+#     # example:
+#     # 'app_name':'database_name',
+#     'polls': 'default',
+#     'securitye': 'default',
+#     'ctos': 'oracle'
+# }
 
 # Password validation
 # https://docs.djangoproject.com/en/2.2/ref/settings/#auth-password-validators
@@ -129,7 +129,7 @@ AUTH_PASSWORD_VALIDATORS = [
 # Internationalization
 # https://docs.djangoproject.com/en/2.2/topics/i18n/
 
-LANGUAGE_CODE = 'en-us'
+LANGUAGE_CODE = 'zh-hans'
 
 TIME_ZONE = 'Asia/Shanghai'
 
