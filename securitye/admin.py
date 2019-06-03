@@ -236,7 +236,7 @@ class OutCar(admin.ModelAdmin):
             if len(q) > 0 else '暂无'
 
     get_valid_date.short_description = '进港有效期'
-    get_tran.short_description='培训情况'
+    get_tran.short_description = '培训情况'
 
 
 
