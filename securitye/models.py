@@ -1,6 +1,8 @@
 from django.db import models
-
+import datetime
 # Create your models here.
+
+verbose_name = '安保系统'
 
 
 class CarModel(models.Model):
@@ -11,126 +13,150 @@ class CarModel(models.Model):
         return '%s(%s)' % (self.driverType, self.desc)
 
     class Meta:
-        verbose_name = '准驾类型'
+        verbose_name = '0.1 准驾类型'
 
 
 class DriverCompany(models.Model):
     companyName = models.CharField(max_length=30, verbose_name='车队名称')
     isDelete = models.BooleanField(default=False, verbose_name='是否有效')
-    recordMan = models.CharField(max_length=15, verbose_name='记录人')
-    recordTime = models.DateField(auto_now_add=True, verbose_name='记录时间')
-    cancelMan = models.CharField(max_length=15, verbose_name='更新人')
-    cancelTime = models.DateTimeField(verbose_name='更新时间')
+    recordMan = models.CharField(max_length=15, verbose_name='记录人', blank=True, null=True)
+    recordTime = models.DateField(auto_now_add=True, verbose_name='记录时间', blank=True, null=True)
+    cancelMan = models.CharField(max_length=15, verbose_name='更新人', blank=True, null=True)
+    cancelTime = models.DateTimeField(verbose_name='更新时间', blank=True, null=True)
 
     def __str__(self):
         return self.companyName
 
     class Meta:
-        verbose_name = '车队'
+        verbose_name = '0.0 车队'
 
 
 class Driver(models.Model):
     driverName = models.CharField(max_length=15, blank=False, verbose_name='司机姓名')
-    driverType = models.ForeignKey(CarModel, on_delete=models.DO_NOTHING, verbose_name='准驾类型')
-    telPhone = models.CharField(max_length=20, verbose_name='司机电话')
+    driverType = models.ForeignKey(CarModel, on_delete=models.DO_NOTHING, verbose_name='准驾类型', blank=True, null=True)
+    telPhone = models.CharField(max_length=20, verbose_name='司机电话', blank=True, null=True)
     idCardNO = models.CharField(max_length=20, blank=False, verbose_name='身份证号码')
-    truckCompanyCode = models.ForeignKey(DriverCompany, on_delete=models.DO_NOTHING, verbose_name='车队')
-    truckNO = models.CharField(max_length=20, verbose_name='驾驶车辆')
-    firstCardDate = models.DateField(verbose_name='初次发证日期')
-    illegalCount = models.IntegerField(verbose_name='违章次数')
-    isDelete = models.BooleanField(default=False)
+    truckCompanyCode = models.ForeignKey(DriverCompany, on_delete=models.DO_NOTHING, verbose_name='车队', blank=True, null=True)
+    truckNO = models.CharField(max_length=20, verbose_name='驾驶车辆', blank=True, null=True)
+    firstCardDate = models.DateField(verbose_name='初次发证日期', blank=True, null=True)
+    illegalCount = models.IntegerField(verbose_name='违章次数', blank=True, null=True)
+    isDelete = models.BooleanField(default=False, editable=False)
+    recordMan = models.CharField(max_length=15, blank=True, null=True, verbose_name='记录人', editable=False)
+    recordTime = models.DateField(auto_now_add=True, verbose_name='记录时间', blank=True, null=True)
+    cancelMan = models.CharField(max_length=15, blank=True, null=True, verbose_name='取消人', editable=False)
+    cancelTime = models.DateTimeField(verbose_name='取消时间', editable=False, blank=True, null=True)
+
+    def delete(self, using=None, keep_parents=False):
+        self.isDelete = True
+        self.save()
+
+    def __str__(self):
+        return '%s(%s)' % (self.driverName, self.idCardNO)
 
     class Meta:
-        verbose_name = '1.司机信息'
+        verbose_name = '1.0 司机信息'
 
 
 class DriverJobCard(models.Model):
     driver = models.ForeignKey(Driver, on_delete=models.CASCADE)
     startTime = models.DateField(verbose_name='开始有效期')
     endTime = models.DateField(verbose_name='结束有效期')
-    recordMan = models.CharField(max_length=15, blank=False, verbose_name='记录人')
-    recordTime = models.DateField(auto_now_add=True, verbose_name='记录时间')
-    cancelMan = models.CharField(max_length=15, blank=False, verbose_name='取消人')
-    cancelTime = models.DateTimeField(verbose_name='取消时间')
-    isOn = models.CharField(default='Y', max_length=1, verbose_name='是否有效')
-    isDelete = models.BooleanField(default=False)
+    recordMan = models.CharField(max_length=15, blank=True, null=True, verbose_name='记录人', editable=False)
+    recordTime = models.DateField(auto_now_add=True, verbose_name='记录时间', blank=True, null=True)
+    cancelMan = models.CharField(max_length=15, blank=True, null=True, verbose_name='取消人', editable=False)
+    cancelTime = models.DateTimeField(verbose_name='取消时间', editable=False, blank=True, null=True)
+    isDelete = models.BooleanField(default=False, editable=False)
+
+    def __str__(self):
+        return '从业资格证:%s至%s' % (self.startTime, self.endTime)
 
     class Meta:
-        verbose_name = '司机从业资格证'
+        verbose_name = '1.1 司机从业资格证'
 
 
 class DriverTran(models.Model):
     driver = models.ForeignKey(Driver, on_delete=models.CASCADE)
     status = models.TextField(verbose_name='培训情况')
-    recordMan = models.CharField(max_length=20, verbose_name='记录人')
-    recordTime = models.DateField(auto_now_add=True, verbose_name='记录时间')
-    cancelMan = models.CharField(max_length=20, verbose_name='取消人')
-    cancelTime = models.DateField(verbose_name='取消时间')
-    isOn = models.CharField(default='Y', max_length=1, verbose_name='是否有效')
-    isDelete = models.BooleanField(default=False)
+    tranDate = models.DateField(verbose_name='培训时间', default=None)
+    recordMan = models.CharField(max_length=20, verbose_name='记录人', editable=False, blank=True, null=True)
+    recordTime = models.DateField(auto_now_add=True, verbose_name='记录时间', editable=False)
+    cancelMan = models.CharField(max_length=20, verbose_name='取消人', editable=False, blank=True, null=True)
+    cancelTime = models.DateField(verbose_name='取消时间', editable=False, blank=True, null=True)
+    isDelete = models.BooleanField(default=False, editable=False, blank=True, null=True)
+
+    def __str__(self):
+        return '培训(%s):%s' % (self.tranDate, self.status)
 
     class Meta:
-        verbose_name = '司机培训'
+        verbose_name = '1.2 司机培训'
 
 
 class DriverTest(models.Model):
     driver = models.ForeignKey(Driver, on_delete=models.CASCADE)
     testScore = models.FloatField(verbose_name='考试成绩')
-    testDate = models.DateTimeField(verbose_name='记录时间')
-    recordMan = models.CharField(max_length=15, blank=False, verbose_name='记录人')
-    recordTime = models.DateField(auto_now_add=True, verbose_name='记录时间')
-    cancelMan = models.CharField(max_length=15, blank=False, verbose_name='取消人')
-    cancelTime = models.DateTimeField(verbose_name='取消时间')
-    isOn = models.CharField(default='Y', max_length=1, verbose_name='是否有效')
-    isDelete = models.BooleanField(default=False)
+    testDate = models.DateTimeField(verbose_name='考试时间')
+    recordMan = models.CharField(max_length=15, blank=True, null=True, verbose_name='记录人', editable=False)
+    recordTime = models.DateField(auto_now_add=True, verbose_name='记录时间', editable=False)
+    cancelMan = models.CharField(max_length=15, blank=True, null=True, verbose_name='取消人', editable=False)
+    cancelTime = models.DateTimeField(verbose_name='取消时间', editable=False, blank=True, null=True)
+    isDelete = models.BooleanField(default=False, editable=False, blank=True, null=True)
+
+    def __str__(self):
+        return '考试:%s至%s' % (self.testDate, self.testScore)
 
     class Meta:
-        verbose_name = '司机考试'
+        verbose_name = '1.3 司机考试'
 
 
 class DriverLearnCard(models.Model):
     driver = models.ForeignKey(Driver, on_delete=models.CASCADE)
     startTime = models.DateField(verbose_name='开始有效期')
     endTime = models.DateField(verbose_name='结束有效期')
-    recordMan = models.CharField(max_length=15, blank=False, verbose_name='记录人')
-    recordTime = models.DateField(auto_now_add=True, verbose_name='记录时间')
-    cancelMan = models.CharField(max_length=15, blank=False, verbose_name='取消人')
-    cancelTime = models.DateTimeField(verbose_name='取消时间')
-    isOn = models.CharField(default='Y', max_length=1, verbose_name='是否有效')
-    isDelete = models.BooleanField(default=False)
+    recordMan = models.CharField(max_length=15, blank=True, null=True, verbose_name='记录人', editable=False)
+    recordTime = models.DateField(auto_now_add=True, verbose_name='记录时间', editable=False)
+    cancelMan = models.CharField(max_length=15, blank=True, null=True, verbose_name='取消人', editable=False)
+    cancelTime = models.DateTimeField(verbose_name='取消时间', editable=False, blank=True, null=True)
+    isDelete = models.BooleanField(default=False, editable=False)
+
+    def __str__(self):
+        return '学习证:%s至%s' % (self.startTime, self.endTime)
 
     class Meta:
-        verbose_name = '司机学习证'
+        verbose_name = '1.4 司机学习证'
 
 
 class DriverTempInCard(models.Model):
     driver = models.ForeignKey(Driver, on_delete=models.CASCADE)
     startTime = models.DateField(verbose_name='开始有效期')
     endTime = models.DateField(verbose_name='结束有效期')
-    recordMan = models.CharField(max_length=15, blank=False, verbose_name='记录人')
-    recordTime = models.DateField(auto_now_add=True, verbose_name='记录时间')
-    cancelMan = models.CharField(max_length=15, blank=False, verbose_name='取消人')
-    cancelTime = models.DateTimeField(verbose_name='取消时间')
-    isOn = models.CharField(default='Y', max_length=1, verbose_name='是否有效')
-    isDelete = models.BooleanField(default=False)
+    recordMan = models.CharField(max_length=15, blank=True, null=True, verbose_name='记录人', editable=False)
+    recordTime = models.DateField(auto_now_add=True, verbose_name='记录时间', editable=False)
+    cancelMan = models.CharField(max_length=15, blank=True, null=True, verbose_name='取消人', editable=False)
+    cancelTime = models.DateTimeField(verbose_name='取消时间', editable=False, blank=True, null=True)
+    isDelete = models.BooleanField(default=False, editable=False)
+
+    def __str__(self):
+        return '临时进港证:%s至%s' % (self.startTime, self.endTime)
 
     class Meta:
-        verbose_name = '临时进港证'
+        verbose_name = '1.5 临时进港证'
 
 
 class DriverLongInCard(models.Model):
     driver = models.ForeignKey(Driver, on_delete=models.CASCADE)
     startTime = models.DateField(verbose_name='开始有效期')
     endTime = models.DateField(verbose_name='结束有效期')
-    recordMan = models.CharField(max_length=15, blank=False, verbose_name='记录人')
-    recordTime = models.DateField(auto_now_add=True, verbose_name='记录时间')
-    cancelMan = models.CharField(max_length=15, blank=False, verbose_name='取消人')
-    cancelTime = models.DateTimeField(verbose_name='取消时间')
-    isOn = models.CharField(default='Y', max_length=1, verbose_name='是否有效')
-    isDelete = models.BooleanField(default=False)
+    recordMan = models.CharField(max_length=15, blank=True, null=True, verbose_name='记录人', editable=False)
+    recordTime = models.DateField(auto_now_add=True, verbose_name='记录时间', editable=False)
+    cancelMan = models.CharField(max_length=15, blank=True, null=True, verbose_name='取消人', editable=False)
+    cancelTime = models.DateTimeField(verbose_name='取消时间', editable=False, blank=True, null=True)
+    isDelete = models.BooleanField(default=False, editable=False)
+
+    def __str__(self):
+        return '长期进港证:%s至%s' % (self.startTime, self.endTime)
 
     class Meta:
-        verbose_name = '长期进港证'
+        verbose_name = '1.6 长期进港证'
 
 #end driver
 
@@ -153,7 +179,7 @@ class OutMan(models.Model):
     isDelete = models.BooleanField(default=False)
 
     class Meta:
-        verbose_name = '外来人员'
+        verbose_name = '2.0 外来人员'
 
 
 class OutCar(models.Model):
@@ -177,7 +203,7 @@ class OutCar(models.Model):
     isDelete = models.BooleanField(default=False)
 
     class Meta:
-        verbose_name = '外来车辆'
+        verbose_name = '3.0 外来车辆'
 
 
 class Illegal(models.Model):
@@ -196,7 +222,7 @@ class Illegal(models.Model):
     isDelete = models.BooleanField(default=False)
 
     class Meta:
-        verbose_name = '人员违章'
+        verbose_name = '4.0 人员违章'
 
 
 class IllegalImage(models.Model):
@@ -206,10 +232,7 @@ class IllegalImage(models.Model):
     isDelete = models.BooleanField(default=False)
 
     class Meta:
-        verbose_name = '人员违章图片'
-
-
-
+        verbose_name = '4.1 人员违章图片'
 
 
 class OutCarTran(models.Model):
@@ -223,10 +246,7 @@ class OutCarTran(models.Model):
     isDelete = models.BooleanField(default=False)
 
     class Meta:
-        verbose_name = '外车培训'
-
-
-
+        verbose_name = '3.1 外车培训'
 
 
 class OutCarCard(models.Model):
@@ -241,7 +261,7 @@ class OutCarCard(models.Model):
     isDelete = models.BooleanField(default=False)
 
     class Meta:
-        verbose_name = '外车进港证有效期'
+        verbose_name = '3.2 外车进港证有效期'
 
 
 class OutManCard(models.Model):
@@ -256,33 +276,33 @@ class OutManCard(models.Model):
     isDelete = models.BooleanField(default=False)
 
     class Meta:
-        verbose_name = '外来人员进港证有效期'
+        verbose_name = '2.1 外来人员进港证有效期'
 
 
 class IllegalAttribute(models.Model):
     illegalAttribute = models.CharField(max_length=15, verbose_name='违章性质', unique=True)
 
     class Meta:
-        verbose_name = '违章性质'
+        verbose_name = '4.1 违章性质'
 
 
 class ResDept(models.Model):
     resDept = models.CharField(max_length=120, verbose_name='责任部门(或公司)', unique=True)
 
     class Meta:
-        verbose_name = '责任部门(或公司)'
+        verbose_name = '4.2 责任部门(或公司)'
 
 
 class ResGroup(models.Model):
     resGroup = models.CharField(max_length=120, verbose_name='班组', unique=True)
 
     class Meta:
-        verbose_name = '责任班组'
+        verbose_name = '4.3 责任班组'
 
 
 class CheckMan(models.Model):
     checkMan = models.CharField(max_length=120, verbose_name='查处人', unique=True)
 
     class Meta:
-        verbose_name = '检查人'
+        verbose_name = '4.4 检查人'
 
