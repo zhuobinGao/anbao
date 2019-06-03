@@ -179,49 +179,82 @@ class DriverLongInCard(models.Model):
 
 class OutMan(models.Model):
     cname = models.CharField(max_length=15, blank=False, verbose_name='姓 名')
-    sex = models.CharField(max_length=2, verbose_name='性别')
+    sex = models.CharField(max_length=2, verbose_name='性别', null=True)
     cardID = models.CharField(max_length=20, verbose_name='身份证号码')
-    telPhone = models.CharField(max_length=20, verbose_name='联系电话')
-    inPortNO = models.CharField(max_length=20, verbose_name='进港证编号')
-    unitName = models.CharField(max_length=45, verbose_name='单 位')
-    position = models.CharField(max_length=15, verbose_name='职务')
-    lxr = models.CharField(max_length=15, verbose_name='单位联系人')
-    unitPhone = models.CharField(max_length=20, verbose_name='单位联系人电话')
-    certificateDate = models.DateField(verbose_name='初次发证时间')
-    vaildStartDate = models.DateField(verbose_name='有效期')
-    vaildEndDate = models.DateField(verbose_name='有效期')
-    illegalCount = models.IntegerField(default=0, verbose_name='违章次数', editable=False)
-    bakMsg = models.TextField(max_length=100, verbose_name='备注')
+    telPhone = models.CharField(max_length=20, verbose_name='联系电话', null=True)
+    inPortNO = models.CharField(max_length=20, verbose_name='进港证编号', null=True)
+    unitName = models.CharField(max_length=45, verbose_name='单 位', null=True)
+    position = models.CharField(max_length=15, verbose_name='职务', null=True)
+    lxr = models.CharField(max_length=15, verbose_name='单位联系人', null=True)
+    unitPhone = models.CharField(max_length=20, verbose_name='单位联系人电话', null=True)
+    certificateDate = models.DateField(verbose_name='初次发证时间', null=True)
+    illegalCount = models.IntegerField(default=0, verbose_name='违章次数', editable=False, null=True)
+    bakMsg = models.TextField(max_length=100, verbose_name='备注', null=True)
+    isDelete = models.BooleanField(default=False, editable=False)
 
-    isDelete = models.BooleanField(default=False)
+    def delete(self, using=None, keep_parents=False):
+        self.isDelete = True
+        self.save()
 
     class Meta:
         verbose_name = '2.0 外来人员'
 
 
+class OutManCard(models.Model):
+    manID = models.ForeignKey(OutMan, on_delete=models.CASCADE, verbose_name='外来人员')
+    startTime = models.DateField(verbose_name='开始有效期')
+    endTime = models.DateField(verbose_name='结束有效期')
+    isDelete = models.BooleanField(default=False, editable=False)
+
+    def delete(self, using=None, keep_parents=False):
+        self.isDelete = True
+        self.save()
+
+    class Meta:
+        verbose_name = '2.1 外来人员进港证有效期'
+
+
 class OutCar(models.Model):
     truckNO = models.CharField(max_length=15, verbose_name='车牌号')
-    driverName = models.CharField(max_length=15, verbose_name='驾驶者姓名')
-    sex = models.CharField(max_length=2, verbose_name='性别')
-    cardID = models.CharField(max_length=20, verbose_name='身份证号码')
-    telPhone = models.CharField(max_length=20, verbose_name='联系电话')
-    inPortNO = models.CharField(max_length=20, verbose_name='进港证编号')
-    unitName = models.CharField(max_length=45, verbose_name='单 位')
-    position = models.CharField(max_length=15, verbose_name='职务')
-    lxr = models.CharField(max_length=15, verbose_name='单位联系人')
-    unitPhone = models.CharField(max_length=20, verbose_name='单位联系人电话')
-    inResion = models.TextField(verbose_name='进港理由')
-    trainStatus = models.CharField(max_length=20, verbose_name='培训情况')
-    firstCardDate = models.DateField(verbose_name='初次发证时间')
-    vaildStartDate = models.DateField(verbose_name='有效期')
-    vaildEndDate = models.DateField(verbose_name='有效期')
-    illegalCount = models.IntegerField(default=0, verbose_name='违章次数')
-    bakMsg = models.TextField(verbose_name='备注')
-
-    isDelete = models.BooleanField(default=False)
+    driverName = models.CharField(max_length=15, verbose_name='驾驶者姓名', null=True)
+    sex = models.CharField(max_length=2, verbose_name='性别', null=True)
+    cardID = models.CharField(max_length=20, verbose_name='身份证号码', null=True)
+    telPhone = models.CharField(max_length=20, verbose_name='联系电话', null=True)
+    inPortNO = models.CharField(max_length=20, verbose_name='进港证编号', null=True)
+    unitName = models.CharField(max_length=45, verbose_name='单 位', null=True)
+    position = models.CharField(max_length=15, verbose_name='职务', null=True)
+    lxr = models.CharField(max_length=15, verbose_name='单位联系人', null=True)
+    unitPhone = models.CharField(max_length=20, verbose_name='单位联系人电话', null=True)
+    inResion = models.TextField(verbose_name='进港理由', null=True)
+    firstCardDate = models.DateField(verbose_name='初次发证时间', null=True)
+    illegalCount = models.IntegerField(default=0, verbose_name='违章次数', editable=False)
+    bakMsg = models.TextField(verbose_name='备注', null=True)
+    isDelete = models.BooleanField(default=False, editable=False)
 
     class Meta:
         verbose_name = '3.0 外来车辆'
+
+
+class OutCarTran(models.Model):
+    driver = models.ForeignKey(OutCar, on_delete=models.CASCADE)
+    status = models.TextField(verbose_name='培训情况')
+    tranDate = models.DateField(verbose_name='培训时间')
+    isDelete = models.BooleanField(default=False, editable=False)
+
+    class Meta:
+        verbose_name = '3.1 外车培训'
+
+
+class OutCarCard(models.Model):
+    carID = models.ForeignKey(OutCar, on_delete=models.CASCADE)
+    startTime = models.DateField(verbose_name='开始有效期')
+    endTime = models.DateField(verbose_name='结束有效期')
+
+    isOn = models.CharField(default='Y', max_length=1, verbose_name='是否有效')
+    isDelete = models.BooleanField(default=False)
+
+    class Meta:
+        verbose_name = '3.2 外车进港证有效期'
 
 
 class Illegal(models.Model):
@@ -252,40 +285,6 @@ class IllegalImage(models.Model):
 
     class Meta:
         verbose_name = '4.1 人员违章图片'
-
-
-class OutCarTran(models.Model):
-    driver = models.ForeignKey(OutCar, on_delete=models.CASCADE)
-    status = models.TextField(verbose_name='培训情况')
-
-    isOn = models.CharField(default='Y', max_length=1, verbose_name='是否有效')
-    isDelete = models.BooleanField(default=False)
-
-    class Meta:
-        verbose_name = '3.1 外车培训'
-
-
-class OutCarCard(models.Model):
-    carID = models.ForeignKey(OutCar, on_delete=models.CASCADE)
-    startTime = models.DateField(verbose_name='开始有效期')
-    endTime = models.DateField(verbose_name='结束有效期')
-
-    isOn = models.CharField(default='Y', max_length=1, verbose_name='是否有效')
-    isDelete = models.BooleanField(default=False)
-
-    class Meta:
-        verbose_name = '3.2 外车进港证有效期'
-
-
-class OutManCard(models.Model):
-    manID = models.ForeignKey(OutMan, on_delete=models.CASCADE)
-    startTime = models.DateField(verbose_name='开始有效期')
-    endTime = models.DateField(verbose_name='结束有效期')
-    isOn = models.CharField(default='Y', max_length=1, verbose_name='是否有效')
-    isDelete = models.BooleanField(default=False)
-
-    class Meta:
-        verbose_name = '2.1 外来人员进港证有效期'
 
 
 class IllegalAttribute(models.Model):

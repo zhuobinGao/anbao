@@ -177,6 +177,69 @@ class DriverLongInCardAdmin(admin.ModelAdmin):
         return queryset, use_distinct
 
 
+class OutManInfo(admin.TabularInline):
+    model = OutManCard
+    extra = 1
+
+
+class OutManAdmin(admin.ModelAdmin):
+
+    def get_vaild_date(self, man):
+        q = OutManCard.objects.filter(manID=man, isDelete=False)
+        q = q.order_by('-endTime')[0:1]
+        return '%s 至 %s' % (to_local_date(q[0].startTime), to_local_date(q[0].endTime)) \
+            if len(q) > 0 else '暂无'
+
+    get_vaild_date.short_description = '进港有效期'
+
+    list_display = ('cname', 'sex', 'cardID', 'telPhone', 'inPortNO' ,'unitName' ,'position' ,'lxr' ,'unitPhone' ,
+                    'certificateDate', 'get_vaild_date', 'illegalCount', 'bakMsg')
+    inlines = (OutManInfo,)
+
+    def get_search_results(self, request, queryset, search_term):
+        queryset, use_distinct = super().get_search_results(request, queryset, search_term)
+        queryset &= self.model.objects.filter(isDelete=False)
+        return queryset, use_distinct
+
+
+class OutManCardAdmin(admin.ModelAdmin):
+    list_display = ('manID', 'startTime', 'endTime')
+
+    def get_search_results(self, request, queryset, search_term):
+        queryset, use_distinct = super().get_search_results(request, queryset, search_term)
+        queryset &= self.model.objects.filter(isDelete=False)
+        return queryset, use_distinct
+
+
+class OutCarTranInfo(admin.TabularInline):
+    model = OutCarTran
+    extra = 1
+
+
+class OutCarTranInfo(admin.TabularInline):
+    model = OutCarCard
+    extra = 1
+
+
+class OutCar(admin.ModelAdmin):
+
+    def get_valid_date(self, car):
+        q = OutCarCard.objects.filter(manID=car, isDelete=False)
+        q = q.order_by('-endTime')[0:1]
+        return '%s 至 %s' % (to_local_date(q[0].startTime), to_local_date(q[0].endTime)) \
+            if len(q) > 0 else '暂无'
+
+    def get_tran(self, car):
+        q = OutCarTran.objects.filter(manID=car, isDelete=False)
+        q = q.order_by('-tranDate')[0:1]
+        return '%s 至 %s' % (to_local_date(q[0].startTime), to_local_date(q[0].endTime)) \
+            if len(q) > 0 else '暂无'
+
+    get_valid_date.short_description = '进港有效期'
+    get_tran.short_description='培训情况'
+
+
+
 
 admin.site.site_header = '安保信息系统'
 admin.site.site_title = 'Security'
@@ -191,18 +254,18 @@ admin.site.register(DriverTest, DriverTestAdmin)
 admin.site.register(DriverLearnCard, DriverLearnCardAdmin)
 admin.site.register(DriverTempInCard, DriverTempInCardAdmin)
 admin.site.register(DriverLongInCard, DriverLongInCardAdmin)
+admin.site.register(DriverTran, DriverTranAdmin)
 
+admin.site.register(OutMan, OutManAdmin)
+admin.site.register(OutManCard, OutManCardAdmin)
 
-
-admin.site.register(OutMan)
 admin.site.register(OutCar)
+admin.site.register(OutCarTran)
+admin.site.register(OutCarCard)
+
+
 admin.site.register(Illegal)
 admin.site.register(IllegalImage)
-admin.site.register(DriverTran)
-admin.site.register(OutCarTran)
-
-admin.site.register(OutCarCard)
-admin.site.register(OutManCard)
 admin.site.register(ResDept)
 admin.site.register(ResGroup)
 admin.site.register(CheckMan)
