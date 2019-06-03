@@ -1,6 +1,7 @@
 from django.contrib import admin
 from .models import *
-
+from django.contrib.auth.models import User
+import datetime
 
 import locale
 # Register your models here.
@@ -13,9 +14,19 @@ def to_local_date(date):
 class CarModelAdmin(admin.ModelAdmin):
     list_display = ('driverType', 'desc')
 
+    def get_search_results(self, request, queryset, search_term):
+        queryset, use_distinct = super().get_search_results(request, queryset, search_term)
+        queryset &= self.model.objects.filter(isDelete=False)
+        return queryset, use_distinct
+
 
 class DriverCompanyAdmin(admin.ModelAdmin):
     list_display = ('companyName', 'isDelete')
+
+    def get_search_results(self, request, queryset, search_term):
+        queryset, use_distinct = super().get_search_results(request, queryset, search_term)
+        queryset &= self.model.objects.filter(isDelete=False)
+        return queryset, use_distinct
 
 
 class DriverJobCardInfo(admin.TabularInline):
@@ -110,19 +121,62 @@ class DriverAdmin(admin.ModelAdmin):
         queryset &= self.model.objects.filter(isDelete=False)
         return queryset, use_distinct
 
-    def save_model(self, request, obj, form, change):
-        obj.recordMan = request.user
-        super().save_model(request, obj, form, change)
 
-    def delete_model(self, request, obj):
-        obj.cancelMan = request.user
-        obj.cancelTime = datetime.datetime.now()
-        super().delete_model(request, obj)
+class DriverJobCardAdmin(admin.ModelAdmin):
+    list_display = ('driver', 'startTime', 'endTime')
+
+    def get_search_results(self, request, queryset, search_term):
+        queryset, use_distinct = super().get_search_results(request, queryset, search_term)
+        queryset &= self.model.objects.filter(isDelete=False)
+        return queryset, use_distinct
 
 
-# class MySite(admin.AdminSite):
-#     site_title = 'Security'
-#     site_header = '安保管理系统'
+class DriverTranAdmin(admin.ModelAdmin):
+
+    list_display = ('driver', 'status', 'tranDate')
+
+    def get_search_results(self, request, queryset, search_term):
+        queryset, use_distinct = super().get_search_results(request, queryset, search_term)
+        queryset &= self.model.objects.filter(isDelete=False)
+        return queryset, use_distinct
+
+
+class DriverTestAdmin(admin.ModelAdmin):
+    list_display = ('driver', 'testScore', 'testDate')
+
+    def get_search_results(self, request, queryset, search_term):
+        queryset, use_distinct = super().get_search_results(request, queryset, search_term)
+        queryset &= self.model.objects.filter(isDelete=False)
+        return queryset, use_distinct
+
+
+class DriverLearnCardAdmin(admin.ModelAdmin):
+    list_display = ('driver', 'startTime', 'endTime')
+
+    def get_search_results(self, request, queryset, search_term):
+        queryset, use_distinct = super().get_search_results(request, queryset, search_term)
+        queryset &= self.model.objects.filter(isDelete=False)
+        return queryset, use_distinct
+
+
+class DriverTempInCardAdmin(admin.ModelAdmin):
+    list_display = ('driver', 'startTime', 'endTime')
+
+    def get_search_results(self, request, queryset, search_term):
+        queryset, use_distinct = super().get_search_results(request, queryset, search_term)
+        queryset &= self.model.objects.filter(isDelete=False)
+        return queryset, use_distinct
+
+
+class DriverLongInCardAdmin(admin.ModelAdmin):
+    list_display = ('driver', 'startTime', 'endTime')
+
+    def get_search_results(self, request, queryset, search_term):
+        queryset, use_distinct = super().get_search_results(request, queryset, search_term)
+        queryset &= self.model.objects.filter(isDelete=False)
+        return queryset, use_distinct
+
+
 
 admin.site.site_header = '安保信息系统'
 admin.site.site_title = 'Security'
@@ -131,7 +185,14 @@ admin.site.site_title = 'Security'
 admin.site.register(CarModel, CarModelAdmin)
 admin.site.register(DriverCompany, DriverCompanyAdmin)
 admin.site.register(Driver, DriverAdmin)
-admin.site.register(DriverJobCard)
+admin.site.register(DriverJobCard, DriverJobCardAdmin)
+#
+admin.site.register(DriverTest, DriverTestAdmin)
+admin.site.register(DriverLearnCard, DriverLearnCardAdmin)
+admin.site.register(DriverTempInCard, DriverTempInCardAdmin)
+admin.site.register(DriverLongInCard, DriverLongInCardAdmin)
+
+
 
 admin.site.register(OutMan)
 admin.site.register(OutCar)
@@ -139,11 +200,7 @@ admin.site.register(Illegal)
 admin.site.register(IllegalImage)
 admin.site.register(DriverTran)
 admin.site.register(OutCarTran)
-admin.site.register(DriverTest)
-admin.site.register(DriverLearnCard)
-admin.site.register(DriverTempInCard)
 
-admin.site.register(DriverLongInCard)
 admin.site.register(OutCarCard)
 admin.site.register(OutManCard)
 admin.site.register(ResDept)
