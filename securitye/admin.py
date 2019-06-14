@@ -1,66 +1,33 @@
 from django.contrib import admin
 from .models import *
-from django.contrib.auth.models import User
-import datetime
+from polls.models import *
 
-import locale
-# Register your models here.
-
+from other.admin import *
+from polls.admin import *
 
 def to_local_date(date):
     return date.strftime('%Y{y}%m{m}%d{d}').format(y='/', m='/', d='')
 
 
-class CarModelAdmin(admin.ModelAdmin):
-    list_display = ('driverType', 'desc')
-
-    def get_search_results(self, request, queryset, search_term):
-        queryset, use_distinct = super().get_search_results(request, queryset, search_term)
-        queryset &= self.model.objects.filter(isDelete=False)
-        return queryset, use_distinct
-
-
 class DriverCompanyAdmin(admin.ModelAdmin):
-    list_display = ('companyName', 'isDelete')
+    list_display = ('code', 'companyName', 'contactMan', 'lxr1', 'phone1', 'tel1', 'fax', 'lxr2', 'phone2', 'tel2',
+                    'mail', 'createMan', 'createTime', 'updateMan', 'updateTime')
 
     def get_search_results(self, request, queryset, search_term):
         queryset, use_distinct = super().get_search_results(request, queryset, search_term)
         queryset &= self.model.objects.filter(isDelete=False)
         return queryset, use_distinct
 
+    def my_syn(self, request, queryset):
+        print('mysyn')
 
-class DriverJobCardInfo(admin.TabularInline):
-    model = DriverJobCard
-    extra = 1
+    my_syn.short_description = "同步CTOS数据"
 
+    def my_syn(self, request, queryset):
+        print('mysyn')
 
-class DriverTranInfo(admin.TabularInline):
-    model = DriverTran
-    extra = 1
-
-
-class DriverTestInfo(admin.TabularInline):
-    model = DriverTest
-    extra = 1
-
-
-class DriverLearnCardInfo(admin.TabularInline):
-    model = DriverLearnCard
-    extra = 1
-
-
-class DriverTempInCardInfo(admin.TabularInline):
-    model = DriverTempInCard
-    extra = 1
-
-
-class DriverLongInCardInfo(admin.TabularInline):
-    model = DriverLongInCard
-    extra = 1
-
-
-class DriverJobCardAdmin(admin.ModelAdmin):
-    list_display = ('driver', 'startTime', 'endTime', 'isOn')
+    my_syn.short_description = "同步CTOS数据"
+    actions = ['my_syn']
 
 
 class DriverAdmin(admin.ModelAdmin):
@@ -122,61 +89,6 @@ class DriverAdmin(admin.ModelAdmin):
         return queryset, use_distinct
 
 
-class DriverJobCardAdmin(admin.ModelAdmin):
-    list_display = ('driver', 'startTime', 'endTime')
-
-    def get_search_results(self, request, queryset, search_term):
-        queryset, use_distinct = super().get_search_results(request, queryset, search_term)
-        queryset &= self.model.objects.filter(isDelete=False)
-        return queryset, use_distinct
-
-
-class DriverTranAdmin(admin.ModelAdmin):
-
-    list_display = ('driver', 'status', 'tranDate')
-
-    def get_search_results(self, request, queryset, search_term):
-        queryset, use_distinct = super().get_search_results(request, queryset, search_term)
-        queryset &= self.model.objects.filter(isDelete=False)
-        return queryset, use_distinct
-
-
-class DriverTestAdmin(admin.ModelAdmin):
-    list_display = ('driver', 'testScore', 'testDate')
-
-    def get_search_results(self, request, queryset, search_term):
-        queryset, use_distinct = super().get_search_results(request, queryset, search_term)
-        queryset &= self.model.objects.filter(isDelete=False)
-        return queryset, use_distinct
-
-
-class DriverLearnCardAdmin(admin.ModelAdmin):
-    list_display = ('driver', 'startTime', 'endTime')
-
-    def get_search_results(self, request, queryset, search_term):
-        queryset, use_distinct = super().get_search_results(request, queryset, search_term)
-        queryset &= self.model.objects.filter(isDelete=False)
-        return queryset, use_distinct
-
-
-class DriverTempInCardAdmin(admin.ModelAdmin):
-    list_display = ('driver', 'startTime', 'endTime')
-
-    def get_search_results(self, request, queryset, search_term):
-        queryset, use_distinct = super().get_search_results(request, queryset, search_term)
-        queryset &= self.model.objects.filter(isDelete=False)
-        return queryset, use_distinct
-
-
-class DriverLongInCardAdmin(admin.ModelAdmin):
-    list_display = ('driver', 'startTime', 'endTime')
-
-    def get_search_results(self, request, queryset, search_term):
-        queryset, use_distinct = super().get_search_results(request, queryset, search_term)
-        queryset &= self.model.objects.filter(isDelete=False)
-        return queryset, use_distinct
-
-
 class OutManInfo(admin.TabularInline):
     model = OutManCard
     extra = 1
@@ -184,16 +96,16 @@ class OutManInfo(admin.TabularInline):
 
 class OutManAdmin(admin.ModelAdmin):
 
-    def get_vaild_date(self, man):
-        q = OutManCard.objects.filter(manID=man, isDelete=False)
+    def get_valid_date(self, man):
+        q = OutManCard.objects.get(manID=man, isDelete=False)
         q = q.order_by('-endTime')[0:1]
         return '%s 至 %s' % (to_local_date(q[0].startTime), to_local_date(q[0].endTime)) \
             if len(q) > 0 else '暂无'
 
-    get_vaild_date.short_description = '进港有效期'
+    get_valid_date.short_description = '进港有效期'
 
-    list_display = ('cname', 'sex', 'cardID', 'telPhone', 'inPortNO' ,'unitName' ,'position' ,'lxr' ,'unitPhone' ,
-                    'certificateDate', 'get_vaild_date', 'illegalCount', 'bakMsg')
+    list_display = ('cname', 'sex', 'cardID', 'telPhone', 'inPortNO', 'unitName', 'position', 'lxr', 'unitPhone',
+                    'certificateDate', 'get_valid_date', 'illegalCount', 'bakMsg')
     inlines = (OutManInfo,)
 
     def get_search_results(self, request, queryset, search_term):
@@ -202,26 +114,7 @@ class OutManAdmin(admin.ModelAdmin):
         return queryset, use_distinct
 
 
-class OutManCardAdmin(admin.ModelAdmin):
-    list_display = ('manID', 'startTime', 'endTime')
-
-    def get_search_results(self, request, queryset, search_term):
-        queryset, use_distinct = super().get_search_results(request, queryset, search_term)
-        queryset &= self.model.objects.filter(isDelete=False)
-        return queryset, use_distinct
-
-
-class OutCarTranInfo(admin.TabularInline):
-    model = OutCarTran
-    extra = 1
-
-
-class OutCarTranInfo(admin.TabularInline):
-    model = OutCarCard
-    extra = 1
-
-
-class OutCar(admin.ModelAdmin):
+class OutCarAdmin(admin.ModelAdmin):
 
     def get_valid_date(self, car):
         q = OutCarCard.objects.filter(manID=car, isDelete=False)
@@ -237,35 +130,108 @@ class OutCar(admin.ModelAdmin):
 
     get_valid_date.short_description = '进港有效期'
     get_tran.short_description = '培训情况'
+    list_display = ('truckNO', 'driverName', 'sex', 'cardID', 'telPhone', 'inPortNO', 'unitName', 'position',
+                    'lxr', 'unitPhone', 'inResion', 'firstCardDate', 'get_valid_date', 'get_tran', 'bakMsg',
+                    'illegalCount')
+    inlines = (OutCarTranInfo, OutCarTranInfo)
+
+    def get_search_results(self, request, queryset, search_term):
+        queryset, use_distinct = super().get_search_results(request, queryset, search_term)
+        queryset &= self.model.objects.filter(isDelete=False)
+        return queryset, use_distinct
 
 
+class IllegalAdmin(admin.ModelAdmin):
+
+    # def show_image(self, illegal):
+    #     q = IllegalImage.objects.all()
+    #     return format_html(
+    #         '<img src="{}" width="100px"/>',
+    #         q.image,
+    #     )
+
+
+    # show_image.short_description = '违章图片'
+
+    list_display = ('illegalDate', 'illegalAttribute', 'illegalCode', 'illegalDesc', 'illegalMan', 'resDept',
+                    'resGroup', 'handle', 'resMoney', 'allRes', 'checkMan', 'bakMsg')
+    inlines = (IllegalImageInfo, )
+
+    def get_search_results(self, request, queryset, search_term):
+        queryset, use_distinct = super().get_search_results(request, queryset, search_term)
+        queryset &= self.model.objects.filter(isDelete=False)
+        return queryset, use_distinct
+
+
+class TruckBodyPrjAdmin(admin.ModelAdmin):
+    list_display = ('code', 'bodyType', 'weight', 'truckCompany', 'basMes')
+
+    def my_syn(self, request, queryset):
+        print('mysyn')
+
+    my_syn.short_description = "同步CTOS数据"
+
+    actions = ['my_syn']
+
+
+class ViolationCodeAdmin(admin.ModelAdmin):
+    list_display = ('code', 'penalty', 'content', 'is_penalty')
+
+    def my_syn(self, request, queryset):
+        print('mysyn')
+
+    my_syn.short_description = "同步CTOS数据"
+    actions = ['my_syn']
+
+
+class TruckAdmin(admin.ModelAdmin):
+
+    def show_name(self, param):
+        return param.driver.driverName
+
+    def show_phone(self, param):
+        return param.driver.telPhone
+
+    show_name.short_description = '司机姓名'
+    show_phone.short_description = '司机电话'
+
+    list_display = ('realTruck', 'truckNO', 'owner', 'isLock', 'weight', 'pcc', 'company',
+                    'basMes', 'truckType', 'fileNO', 'isZX', 'regDate', 'checkDate', 'tranNO',
+                    'insuranceNO', 'show_name', 'show_phone', 'createMan', 'createTime', 'updateMan', 'updateTime')
+
+    def my_syn(self, request, queryset):
+        print('mysyn')
+
+    my_syn.short_description = "同步CTOS数据"
+    actions = ['my_syn']
+
+
+class TruckIllegalAdmin(admin.ModelAdmin):
+
+    list_display = ('illegalTime', 'code', 'truck', 'driverName', 'status', 'desc',
+                    'lockStartTime', 'lockEndTime', 'checkMan')
 
 
 admin.site.site_header = '安保信息系统'
 admin.site.site_title = 'Security'
 
-# admin.site = MySite(name='management')
-admin.site.register(CarModel, CarModelAdmin)
 admin.site.register(DriverCompany, DriverCompanyAdmin)
+admin.site.register(Truck, TruckAdmin)
+admin.site.register(TruckIIllegal, TruckIllegalAdmin)
+admin.site.register(ViolationCode, ViolationCodeAdmin)
+admin.site.register(TruckBodyPrj, TruckBodyPrjAdmin)
+
 admin.site.register(Driver, DriverAdmin)
-admin.site.register(DriverJobCard, DriverJobCardAdmin)
-#
-admin.site.register(DriverTest, DriverTestAdmin)
-admin.site.register(DriverLearnCard, DriverLearnCardAdmin)
-admin.site.register(DriverTempInCard, DriverTempInCardAdmin)
-admin.site.register(DriverLongInCard, DriverLongInCardAdmin)
-admin.site.register(DriverTran, DriverTranAdmin)
-
 admin.site.register(OutMan, OutManAdmin)
-admin.site.register(OutManCard, OutManCardAdmin)
-
-admin.site.register(OutCar)
-admin.site.register(OutCarTran)
-admin.site.register(OutCarCard)
+admin.site.register(OutCar, OutCarAdmin)
+admin.site.register(Illegal, IllegalAdmin)
 
 
-admin.site.register(Illegal)
-admin.site.register(IllegalImage)
-admin.site.register(ResDept)
-admin.site.register(ResGroup)
-admin.site.register(CheckMan)
+
+
+
+#------------------------------------
+
+
+
+

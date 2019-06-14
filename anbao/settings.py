@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/2.2/ref/settings/
 """
 
 import os
+from celery.schedules import crontab
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -33,6 +34,7 @@ ALLOWED_HOSTS = []
 INSTALLED_APPS = [
     'polls.apps.PollsConfig',
     'securitye.apps.SecurityeConfig',
+    'other.apps.OtherConfig',
     'ctos.apps.CtosConfig',
     'django.contrib.admin',
     'django.contrib.auth',
@@ -40,6 +42,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'stdimage',
 ]
 
 MIDDLEWARE = [
@@ -86,26 +89,27 @@ DATABASES = {
         'HOST': '127.0.0.1',
         'PORT': '3306'
     },
-    # 'oracle': {
-    #     'ENGINE': 'django.db.backends.oracle',
-    #     'NAME': 'bmtest1',
-    #     'USER': 'ctos',
-    #     'PASSWORD': 'www',
-    #     'HOST': '10.2.3.99',
-    #     'PORT': '1521'
-    # },
+    'oracle': {
+        'ENGINE': 'django.db.backends.oracle',
+        'NAME': 'bmtest1',
+        'USER': 'ctos',
+        'PASSWORD': 'www',
+        'HOST': '10.2.3.99',
+        'PORT': '1521'
+    },
 
 }
 
-# DATABASE_ROUTERS = ['anbao.database_router.DatabaseAppsRouter']
-#
-# DATABASE_APPS_MAPPING = {
-#     # example:
-#     # 'app_name':'database_name',
-#     'polls': 'default',
-#     'securitye': 'default',
-#     'ctos': 'oracle'
-# }
+DATABASE_ROUTERS = ['anbao.database_router.DatabaseAppsRouter']
+
+DATABASE_APPS_MAPPING = {
+    # example:
+    # 'app_name':'database_name',
+    'polls': 'default',
+    'other': 'default',
+    'securitye': 'default',
+    'ctos': 'oracle'
+}
 
 # Password validation
 # https://docs.djangoproject.com/en/2.2/ref/settings/#auth-password-validators
@@ -144,3 +148,7 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/2.2/howto/static-files/
 
 STATIC_URL = '/static/'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media').replace('\\', '/')
+MEDIA_URL = '/media/'
+
+
