@@ -10,17 +10,24 @@ class TruckBodyPrj(models.Model):
     weight = models.FloatField(null=True, blank=True, verbose_name='拖架重量(kg)')
     truckCompany = models.CharField(max_length=30, verbose_name='所属外拖公司')
     basMes = models.CharField(max_length=50, null=True, blank=True, verbose_name='备注')
+    cnameCompany = models.CharField(max_length=30, verbose_name='所属外拖公司',null=True, blank=True, default=None)
+
+    def __str__(self):
+        return '拖架管理:%s' % self.code
 
     class Meta:
         verbose_name = '5.0 托架管理'
 
 
 class ViolationCode(models.Model):
-    vid = models.IntegerField(unique=True, verbose_name='备注', editable=False)
-    code = models.CharField(max_length=10, null=True, blank=True, verbose_name='违章代码')
+    vid = models.BigIntegerField(unique=True, verbose_name='主键')
+    code = models.CharField(max_length=42, null=True, blank=True, verbose_name='违章代码')
     penalty = models.FloatField(null=True, blank=True, verbose_name='罚分数值')
     content = models.CharField(max_length=100, null=True, blank=True, verbose_name='违章内容')
-    is_penalty = models.BooleanField(default=False, null=True, blank=True, verbose_name='是否统计罚分')
+    is_penalty = models.BooleanField(default=False, blank=True, verbose_name='是否统计罚分')
+
+    def __str__(self):
+        return '违章代码管理:%s' % self.code
 
     class Meta:
         verbose_name = '4.0 违章代码'
@@ -38,18 +45,17 @@ class DriverCompany(models.Model):
     phone2 = models.CharField(max_length=40, verbose_name='电话2', null=True, blank=True, default=None)
     tel2 = models.CharField(max_length=40, verbose_name='手机2', null=True, blank=True, default=None)
     mail = models.CharField(max_length=40, verbose_name='邮箱', null=True, blank=True, default=None)
+    address = models.CharField(max_length=240, verbose_name='注册地址', null=True, blank=True, default=None)
     createMan = models.CharField(max_length=40, verbose_name='创建人', null=True, blank=True, default=None)
     createTime = models.DateTimeField(verbose_name='创建时间', null=True, blank=True, default=None)
     updateMan = models.CharField(max_length=40, verbose_name='更新人', null=True, blank=True, default=None)
     updateTime = models.DateTimeField(verbose_name='更新时间', null=True, blank=True, default=None)
     isDelete = models.BooleanField(default=False, verbose_name='是否有效', editable=False)
-
-    def delete(self, using=None, keep_parents=False):
-        self.isDelete = True
-        self.save()
+    createManCname = models.CharField(max_length=40, verbose_name='创建人', null=True, blank=True, default=None)
+    updateManCname = models.CharField(max_length=40, verbose_name='更新人', null=True, blank=True, default=None)
 
     def __str__(self):
-        return self.companyName
+        return '拖车公司:%s' % self.companyName
 
     class Meta:
         verbose_name = '1.0 拖车公司'
@@ -66,12 +72,12 @@ class Driver(models.Model):
     illegalCount = models.IntegerField(verbose_name='违章次数', null=True, blank=True)
     isDelete = models.BooleanField(default=False, editable=False)
 
-    def delete(self, using=None, keep_parents=False):
-        self.isDelete = True
-        self.save()
+    # def delete(self, using=None, keep_parents=False):
+    #     self.isDelete = True
+    #     self.save()
 
     def __str__(self):
-        return '%s(%s)' % (self.driverName, self.idCardNO)
+        return '司机信息:%s(%s)' % (self.driverName, self.idCardNO)
 
     class Meta:
         verbose_name = '6.0 司机信息'
@@ -82,30 +88,36 @@ class Truck(models.Model):
         ('牵引车', '牵引车'),
         ('挂车', '挂车')
     )
-    realTruck = models.CharField(max_length=12, verbose_name='车牌号', null=True, blank=True)
+    truckID = models.BigIntegerField(primary_key=True)
+    realTruck = models.CharField(max_length=12, verbose_name='真实车牌号', null=True, blank=True)
     truckNO = models.CharField(max_length=12, verbose_name='车号', null=True, blank=True)
     owner = models.CharField(max_length=40, verbose_name='车主', null=True, blank=True)
-    isLock = models.BooleanField(default=False, verbose_name='是否锁定', null=True, blank=True)
+    isLock = models.BooleanField(default=False, verbose_name='是否锁定', blank=True)
     weight = models.IntegerField(verbose_name='拖头重(kg)', null=True, blank=True)
-    pcc = models.CharField(max_length=15, verbose_name='改为PCC卡号', null=True, blank=True)
-    company = models.ForeignKey(DriverCompany, on_delete=models.DO_NOTHING, verbose_name='', null=True, blank=True)
+    pcc = models.CharField(max_length=15, verbose_name='PCC卡号', null=True, blank=True)
+    companyCode = models.CharField(max_length=48, verbose_name='所属拖车公司', null=True, blank=True)
+    company = models.CharField(max_length=48, verbose_name='所属拖车公司', null=True, blank=True)
+
     basMes = models.CharField(max_length=200, verbose_name='备注', null=True, blank=True)
     truckType = models.CharField(max_length=15, verbose_name='车辆类型', null=True, blank=True, choices=TRUCK_TYPE_CHOICES)
     fileNO = models.CharField(max_length=48, verbose_name='档案号', null=True, blank=True)
-    isZX = models.BooleanField(default=False, verbose_name='是否自卸', null=True, blank=True)
+    isZX = models.BooleanField(default=False, verbose_name='是否自卸', blank=True)
     regDate = models.DateField(verbose_name='注册日期', null=True, blank=True)
     checkDate = models.DateField(verbose_name='年审月份', null=True, blank=True)
     tranNO = models.CharField(max_length=48, verbose_name='道路运输证号', null=True, blank=True)
     insuranceNO = models.CharField(max_length=48, verbose_name='保险单号', null=True, blank=True)
 
-    driver = models.ForeignKey(Driver,  on_delete=models.DO_NOTHING)
+    driver = models.ForeignKey(Driver,  on_delete=models.DO_NOTHING, null=True, blank=True)
     createMan = models.CharField(max_length=15, verbose_name='创建人', null=True, blank=True)
     createTime = models.DateTimeField(verbose_name='创建时间', null=True, blank=True)
     updateMan = models.CharField(max_length=40, verbose_name='更新人', null=True, blank=True)
     updateTime = models.DateTimeField(verbose_name='更新时间', null=True, blank=True)
+    createManCName = models.CharField(max_length=15, verbose_name='创建人', null=True, blank=True)
+    updateManCName = models.CharField(max_length=40, verbose_name='更新人', null=True, blank=True)
+    isPCC = models.BooleanField(default=False, verbose_name='是否启用IC卡', blank=True)
 
     def __str__(self):
-        return '%s' % self.truckNO
+        return '外拖:%s(%s)' % (self.truckNO if self.truckNO is not None else '', self.realTruck)
 
     class Meta:
         verbose_name = '2.0 拖车信息'
@@ -126,6 +138,9 @@ class TruckIIllegal(models.Model):
     lockEndTime = models.DateTimeField(verbose_name='锁车结束时间', null=True, blank=True)
     checkMan = models.ForeignKey(CheckMan, on_delete=models.DO_NOTHING, verbose_name='查处人', null=True, blank=True)
 
+    def __str__(self):
+        return '违章管理:%s(%s)' % (self.illegalTime, self.code)
+
     class Meta:
         verbose_name = '3.0违章管理'
 
@@ -145,9 +160,9 @@ class OutMan(models.Model):
     bakMsg = models.TextField(max_length=100, verbose_name='备注', null=True, blank=True)
     isDelete = models.BooleanField(default=False, editable=False)
 
-    def delete(self, using=None, keep_parents=False):
-        self.isDelete = True
-        self.save()
+    # def delete(self, using=None, keep_parents=False):
+    #     self.isDelete = True
+    #     self.save()
 
     class Meta:
         verbose_name = '7.0 外来人员'
@@ -170,9 +185,8 @@ class OutCar(models.Model):
     bakMsg = models.TextField(verbose_name='备注', null=True, blank=True)
     isDelete = models.BooleanField(default=False, editable=False)
 
-    def delete(self, using=None, keep_parents=False):
-        self.isDelete = True
-        self.save()
+    def __str__(self):
+        return '外来车辆:%s(%s)' % (self.truckNO, self.driverName)
 
     class Meta:
         verbose_name = '8.0 外来车辆'
@@ -181,7 +195,7 @@ class OutCar(models.Model):
 class Illegal(models.Model):
     illegalDate = models.DateField(verbose_name='违章日期')
     illegalAttribute = models.ForeignKey(IllegalAttribute, on_delete=models.DO_NOTHING, verbose_name='违章性质', null=True, blank=True)
-    illegalCode = models.CharField(max_length=15, verbose_name='违章代码')
+    illegalCode = models.ForeignKey(ViolationCode, on_delete=models.DO_NOTHING, verbose_name='违章代码', null=True, blank=True, default=None)
     illegalDesc = models.TextField(verbose_name='三违行为概述', null=True, blank=True)
     illegalMan = models.CharField(max_length=120, verbose_name='违章者', null=True, blank=True)
 
@@ -194,6 +208,9 @@ class Illegal(models.Model):
     checkMan = models.ForeignKey(CheckMan, on_delete=models.DO_NOTHING, verbose_name='查处人', null=True, blank=True)
     bakMsg = models.TextField(verbose_name='备 注', null=True, blank=True)
     isDelete = models.BooleanField(default=False, editable=False)
+
+    def __str__(self):
+        return '人员违章:%s' % self.illegalDate
 
     class Meta:
         verbose_name = '9.0 人员违章'

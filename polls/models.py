@@ -12,10 +12,6 @@ class DriverJobCard(models.Model):
 
     isDelete = models.BooleanField(default=False, editable=False)
 
-    def delete(self, using=None, keep_parents=False):
-        self.isDelete = True
-        self.save()
-
     def __str__(self):
         return '从业资格证:%s至%s' % (self.startTime, self.endTime)
 
@@ -28,11 +24,7 @@ class DriverTest(models.Model):
     testScore = models.FloatField(verbose_name='考试成绩')
     testDate = models.DateTimeField(verbose_name='考试时间')
 
-    isDelete = models.BooleanField(default=False, editable=False, null=True, blank=True)
-
-    def delete(self, using=None, keep_parents=False):
-        self.isDelete = True
-        self.save()
+    isDelete = models.BooleanField(default=False, editable=False, blank=True)
 
     def __str__(self):
         return '考试:%s至%s' % (self.testDate, self.testScore)
@@ -48,10 +40,6 @@ class DriverLearnCard(models.Model):
 
     isDelete = models.BooleanField(default=False, editable=False)
 
-    def delete(self, using=None, keep_parents=False):
-        self.isDelete = True
-        self.save()
-
     def __str__(self):
         return '学习证:%s至%s' % (self.startTime, self.endTime)
 
@@ -65,10 +53,6 @@ class DriverTempInCard(models.Model):
     endTime = models.DateField(verbose_name='结束有效期')
 
     isDelete = models.BooleanField(default=False, editable=False)
-
-    def delete(self, using=None, keep_parents=False):
-        self.isDelete = True
-        self.save()
 
     def __str__(self):
         return '临时进港证:%s至%s' % (self.startTime, self.endTime)
@@ -84,10 +68,6 @@ class DriverLongInCard(models.Model):
 
     isDelete = models.BooleanField(default=False, editable=False)
 
-    def delete(self, using=None, keep_parents=False):
-        self.isDelete = True
-        self.save()
-
     def __str__(self):
         return '长期进港证:%s至%s' % (self.startTime, self.endTime)
 
@@ -101,10 +81,6 @@ class OutManCard(models.Model):
     endTime = models.DateField(verbose_name='结束有效期')
     isDelete = models.BooleanField(default=False, editable=False)
 
-    def delete(self, using=None, keep_parents=False):
-        self.isDelete = True
-        self.save()
-
     class Meta:
         verbose_name = '外来人员进港证有效期'
 
@@ -114,10 +90,6 @@ class OutCarTran(models.Model):
     status = models.TextField(verbose_name='培训情况')
     tranDate = models.DateField(verbose_name='培训时间')
     isDelete = models.BooleanField(default=False, editable=False)
-
-    def delete(self, using=None, keep_parents=False):
-        self.isDelete = True
-        self.save()
 
     class Meta:
         verbose_name = '外车培训'
@@ -129,10 +101,6 @@ class OutCarCard(models.Model):
     endTime = models.DateField(verbose_name='结束有效期')
     isDelete = models.BooleanField(default=False)
 
-    def delete(self, using=None, keep_parents=False):
-        self.isDelete = True
-        self.save()
-
     class Meta:
         verbose_name = '外车进港证有效期'
 
@@ -143,6 +111,9 @@ class IllegalImage(models.Model):
     cTime = models.DateField(auto_now_add=True, verbose_name='图片日期')
     isDelete = models.BooleanField(default=False, editable=False)
 
+    def __str__(self):
+        return self.image.name
+
     class Meta:
         verbose_name = '人员违章图片'
 
@@ -152,11 +123,7 @@ class DriverTran(models.Model):
     status = models.TextField(verbose_name='培训情况')
     tranDate = models.DateField(verbose_name='培训时间', default=None)
 
-    isDelete = models.BooleanField(default=False, editable=False, null=True, blank=True)
-
-    def delete(self, using=None, keep_parents=False):
-        self.isDelete = True
-        self.save()
+    isDelete = models.BooleanField(default=False, editable=False, blank=True)
 
     def __str__(self):
         return '培训(%s):%s' % (self.tranDate, self.status)

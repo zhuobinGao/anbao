@@ -139,7 +139,6 @@ class IllegalImageInfo(admin.TabularInline):
 class IllegalImageAdmin(admin.ModelAdmin):
 
     def image_data(self, param):
-        print('url', param.image.url)
         return mark_safe(u'<img src="{}" width="100px" />'.format(param.image.url))
 
     image_data.short_description = u'图片'

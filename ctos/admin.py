@@ -23,14 +23,15 @@ class er_truckbody_prjAdmin(admin.ModelAdmin):
     actions = None
     list_display = ('TRUCKBODYCODE_PRJ', 'TRUCKBODYTYPECODE_PRJ', 'WEIGHT_PRJ', 'TRUCKCOMPANY_PRJ', 'MEMO_PRJ')
 
+
 class er_violationcodeAdmin(admin.ModelAdmin):
     actions = None
     list_display = ('VIOLATIONCODEID', 'VIOLATIONCODE', 'PENALTY', 'CONTENT', 'ISPENALTY', 'LASTUPDATEMAN',
                     'LASTUPDATETIME')
 
 
-admin.site.register(er_truck, er_truckAdmin)
-admin.site.register(pl_guests, pl_guestsAdmin)
-admin.site.register(er_truckbody_prj, er_truckbody_prjAdmin)
-admin.site.register(er_violationcode, er_violationcodeAdmin)
+# admin.site.register(er_truck, er_truckAdmin)
+# admin.site.register(pl_guests, pl_guestsAdmin)
+# admin.site.register(er_truckbody_prj, er_truckbody_prjAdmin)
+# admin.site.register(er_violationcode, er_violationcodeAdmin)
 

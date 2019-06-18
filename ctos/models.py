@@ -10,7 +10,15 @@ class er_truck(models.Model):
     TRAILNO = models.CharField(max_length=40)
     ISLOCK = models.CharField(max_length=40)
     REMARK = models.CharField(max_length=40)
+
+    TRUCKCOMPANYCODE = models.CharField(max_length=40)
+
+    CREATER = models.CharField(max_length=40)
+    CREATETIME = models.DateTimeField()
     LASTUPDATEMAN = models.CharField(max_length=40)
+    LASTUPDATETIME = models.DateTimeField()
+
+    ISPCC = models.CharField(max_length=1)
 
     class Meta:
         db_table = 'er_truck'
@@ -52,7 +60,7 @@ class er_truckbody_prj(models.Model):
 
 
 class er_violationcode(models.Model):
-    VIOLATIONCODEID = models.IntegerField(primary_key=True)
+    VIOLATIONCODEID = models.BigIntegerField(primary_key=True)
     VIOLATIONCODE = models.CharField(max_length=40)
     PENALTY = models.FloatField()
     CONTENT = models.CharField(max_length=140)
@@ -62,3 +70,12 @@ class er_violationcode(models.Model):
 
     class Meta:
         db_table = 'er_violationcode'
+
+
+class pl_user(models.Model):
+    US_ID = models.BigIntegerField(primary_key=True)
+    US_LOGID = models.CharField(max_length=20, verbose_name='联系人1', null=True, blank=True, default=None)
+    US_NAME = models.CharField(max_length=40, verbose_name='联系人1', null=True, blank=True, default=None)
+
+    class Meta:
+        db_table = 'pl_user'

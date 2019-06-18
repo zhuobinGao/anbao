@@ -12,6 +12,7 @@ https://docs.djangoproject.com/en/2.2/ref/settings/
 
 import os
 from celery.schedules import crontab
+from django.contrib import messages
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -32,18 +33,43 @@ ALLOWED_HOSTS = []
 # Application definition
 
 INSTALLED_APPS = [
-    'polls.apps.PollsConfig',
-    'securitye.apps.SecurityeConfig',
-    'other.apps.OtherConfig',
-    'ctos.apps.CtosConfig',
+    'suit',
+    # 'django'
+    # 'bootstrap3',
+    # 'django_admin_bootstrapped',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'stdimage',
+    'polls.apps.PollsConfig',
+    'securitye.apps.SecurityeConfig',
+    'other.apps.OtherConfig',
+    'ctos.apps.CtosConfig',
 ]
+
+USE_L10N = True
+
+USE_TZ = False
+
+DATETIME_FORMAT = 'Y-m-d H:i:s'
+
+DATE_FORMAT = 'Y-m-d'
+
+SUIT_CONFIG = {  # suit页面配置
+    'ADMIN_NAME': '安保信息系统',  # 登录界面提示
+    'LIST_PER_PAGE': 20,  # 表中显示行数
+    # 'MENU': ({'label': u'用户管理', 'app': 'auth',
+    #           'icon': 'icon-lock',  # 显示左边菜单的图标
+    #           'models': ('auth.User', 'auth.Group')},  # 每一个字典表示左侧菜单的一栏
+    #          {'label': u'监控管理', 'app': 'frame',
+    #           'models': ('frame.Markets', 'frame.Products', 'frame.Links', 'frame.Modules', 'frame.MachineRooms',
+    #                      'frame.Bases', 'frame.Accounts', 'frame.Zabbix_Hosts', 'frame.Zabbix_Items', 'frame.Whites',
+    #                      'frame.Pyscripts', 'frame.Pyfuncs', 'frame.Global_confs', 'frame.Alarms')},
+    #          ),
+    # label表示name，app表示上边的install的app，models表示用了哪些models
+}
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',

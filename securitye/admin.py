@@ -1,9 +1,34 @@
-from django.contrib import admin
-from .models import *
-from polls.models import *
-
-from other.admin import *
 from polls.admin import *
+from django.contrib import messages
+from ctos.models import *
+from django.utils.html import format_html
+from django.http import HttpResponse
+import datetime
+import csv
+
+
+def export_to_csv(model_admin, request, queryset):
+    opts = model_admin.model._meta
+    response = HttpResponse(content_type='text/csv')
+    print('opts.verbose_name', opts)
+    response['Content-Disposition'] = u'attachment;filename=csv_file.csv'
+
+    writer = csv.writer(response)
+    fields = [field for field in opts.get_fields() if not field.many_to_many and not field.one_to_many]
+    writer.writerow([field.verbose_name for field in fields])
+    for obj in queryset:
+        data_row = []
+        for field in fields:
+            value = getattr(obj, field.name)
+            if isinstance(value, datetime.datetime):
+                value = value.strftime('%d/%m/%Y')
+            data_row.append(value)
+        writer.writerow(data_row)
+    return response
+
+
+export_to_csv.short_description = '导出CSV'
+
 
 def to_local_date(date):
     return date.strftime('%Y{y}%m{m}%d{d}').format(y='/', m='/', d='')
@@ -11,23 +36,93 @@ def to_local_date(date):
 
 class DriverCompanyAdmin(admin.ModelAdmin):
     list_display = ('code', 'companyName', 'contactMan', 'lxr1', 'phone1', 'tel1', 'fax', 'lxr2', 'phone2', 'tel2',
-                    'mail', 'createMan', 'createTime', 'updateMan', 'updateTime')
+                    'mail', 'createManCname', 'createTime', 'updateManCname', 'updateTime')
 
-    def get_search_results(self, request, queryset, search_term):
-        queryset, use_distinct = super().get_search_results(request, queryset, search_term)
-        queryset &= self.model.objects.filter(isDelete=False)
-        return queryset, use_distinct
-
-    def my_syn(self, request, queryset):
-        print('mysyn')
-
-    my_syn.short_description = "同步CTOS数据"
+    ordering = ('-companyName',)
+    search_fields = ('code', 'companyName', 'contactMan', )
+    list_filter = ('companyName', 'contactMan')
+    list_per_page = 15
 
     def my_syn(self, request, queryset):
-        print('mysyn')
+        if len(queryset) != 1:
+            self.message_user(request, '请选择"CTOS同步"记录进行数据同步', level=messages.ERROR)
+            return
+        if queryset[0].code != 'SYN':
+            self.message_user(request, '请选择"CTOS同步"记录进行数据同步', level=messages.ERROR)
+            return
+        list1 = pl_guests.objects.filter(ISTRUCKCOMPANY='Y')
+        list2 = DriverCompany.objects.all()
+        count = 0
+        for tmp in list1:
+            update = False
+            code = tmp.GUESTCODE
+            for tmp2 in list2:
+                if code == tmp2.code:
+                    update = True
+                    tmp2.companyName = tmp.CNAME
+                    tmp2.contactMan = tmp.CONTACTMAN
+                    tmp2.lxr1 = tmp.CONTACTPERSON
+                    tmp2.phone1 = tmp.CONTACTTEL
+                    tmp2.tel1 = tmp.CONTACTMOBIL
+
+                    tmp2.fax = tmp.FAX
+                    tmp2.lxr2 = tmp.CONTACTMAN2
+                    tmp2.phone2 = tmp.TELEPHONE2
+                    tmp2.tel2 = tmp.CELLPHONE
+                    tmp2.mail = tmp.EMAIL
+
+                    tmp2.createMan = tmp.CREATEMAN
+                    tmp2.createTime = tmp.CREATETIME
+                    tmp2.updateMan = tmp.LASTUPDATEMAN
+                    tmp2.updateTime = tmp.LASTUPDATETIME
+                    tmp2.address = tmp.ADDRESS
+                    tmp2.createManCname = tmp.CREATEMAN
+                    tmp2.updateManCname = tmp.LASTUPDATEMAN
+                    tmp2.save()
+                    count += 1
+                    break
+            if update is False:
+                q = DriverCompany(code=tmp.GUESTCODE, companyName=tmp.CNAME,
+                                 contactMan=tmp.CONTACTMAN, lxr1=tmp.CONTACTPERSON, phone1=tmp.CONTACTTEL,
+                                 tel1=tmp.CONTACTMOBIL, fax=tmp.FAX, lxr2=tmp.CONTACTMAN2,
+                                 phone2=tmp.TELEPHONE2, tel2=tmp.CELLPHONE, mail=tmp.EMAIL,
+                                 address=tmp.ADDRESS, createMan=tmp.CREATEMAN ,
+                                 createTime=tmp.CREATETIME, updateMan=tmp.LASTUPDATEMAN,
+                                 updateTime=tmp.LASTUPDATETIME)
+                q.createManCname = tmp.CREATEMAN
+                q.updateManCname = tmp.LASTUPDATEMAN
+                q.save()
+                count += 1
+        list2 = DriverCompany.objects.all()
+        d = {'': ''}
+        for tmp2 in list2:
+            if d.get(tmp2.createManCname) is not None:
+                tmp2.createManCname = d[tmp2.createMan]
+            else:
+                u1 = pl_user.objects.filter(US_LOGID=tmp2.createMan)
+                if len(u1) > 0:
+                    tmp2.createManCname = u1[0].US_NAME
+                    d[tmp2.createMan] = u1[0].US_NAME
+
+            if d.get(tmp2.updateMan) is not None:
+                tmp2.updateManCname = d[tmp2.updateMan]
+            else:
+                u1 = pl_user.objects.filter(US_LOGID=tmp2.updateMan)
+                if len(u1) > 0:
+                    tmp2.updateManCname = u1[0].US_NAME
+                    d[tmp2.updateMan] = u1[0].US_NAME
+            tmp2.save()
+        self.message_user(request, '已同步%d条数据' % count)
+
+    def delete_queryset(self, request, queryset):
+        for tmp in queryset:
+            if tmp.code == 'SYN':
+                self.message_user(request, '不能删除用于"CTOS同步"的记录', level=messages.ERROR)
+                return
+        super().delete_queryset(request, queryset)
 
     my_syn.short_description = "同步CTOS数据"
-    actions = ['my_syn']
+    actions = [export_to_csv, my_syn]
 
 
 class DriverAdmin(admin.ModelAdmin):
@@ -82,11 +177,7 @@ class DriverAdmin(admin.ModelAdmin):
     search_fields = ['driverName', 'truckCompanyCode__companyName', 'illegalCount']
     list_per_page = 50
     date_hierarchy = 'firstCardDate'  # 详细时间分层筛选
-
-    def get_search_results(self, request, queryset, search_term):
-        queryset, use_distinct = super().get_search_results(request, queryset, search_term)
-        queryset &= self.model.objects.filter(isDelete=False)
-        return queryset, use_distinct
+    actions = [export_to_csv]
 
 
 class OutManInfo(admin.TabularInline):
@@ -107,26 +198,23 @@ class OutManAdmin(admin.ModelAdmin):
     list_display = ('cname', 'sex', 'cardID', 'telPhone', 'inPortNO', 'unitName', 'position', 'lxr', 'unitPhone',
                     'certificateDate', 'get_valid_date', 'illegalCount', 'bakMsg')
     inlines = (OutManInfo,)
-
-    def get_search_results(self, request, queryset, search_term):
-        queryset, use_distinct = super().get_search_results(request, queryset, search_term)
-        queryset &= self.model.objects.filter(isDelete=False)
-        return queryset, use_distinct
+    actions = [export_to_csv]
 
 
 class OutCarAdmin(admin.ModelAdmin):
 
     def get_valid_date(self, car):
-        q = OutCarCard.objects.filter(manID=car, isDelete=False)
+        q = OutCarCard.objects.filter(carID=car)
         q = q.order_by('-endTime')[0:1]
         return '%s 至 %s' % (to_local_date(q[0].startTime), to_local_date(q[0].endTime)) \
             if len(q) > 0 else '暂无'
 
     def get_tran(self, car):
-        q = OutCarTran.objects.filter(manID=car, isDelete=False)
+        q = OutCarTran.objects.filter(driver=car)
         q = q.order_by('-tranDate')[0:1]
         return '%s 至 %s' % (to_local_date(q[0].startTime), to_local_date(q[0].endTime)) \
             if len(q) > 0 else '暂无'
+
 
     get_valid_date.short_description = '进港有效期'
     get_tran.short_description = '培训情况'
@@ -135,81 +223,264 @@ class OutCarAdmin(admin.ModelAdmin):
                     'illegalCount')
     inlines = (OutCarTranInfo, OutCarTranInfo)
 
-    def get_search_results(self, request, queryset, search_term):
-        queryset, use_distinct = super().get_search_results(request, queryset, search_term)
-        queryset &= self.model.objects.filter(isDelete=False)
-        return queryset, use_distinct
+    actions = [export_to_csv]
 
 
 class IllegalAdmin(admin.ModelAdmin):
 
-    # def show_image(self, illegal):
-    #     q = IllegalImage.objects.all()
-    #     return format_html(
-    #         '<img src="{}" width="100px"/>',
-    #         q.image,
-    #     )
+    def image_data(self, param):
+        list1 = IllegalImage.objects.filter(illegal=param)
+        html = u'<ol>'
+        for tmp in list1:
+            html += u'<li><a href="{}" target="_blank"><img src="{}" width="100px" /></a></li>'.format(tmp.image.url, tmp.image.url)
+        html += u'</ol>'
+        print(html)
 
+        return mark_safe(html)
 
-    # show_image.short_description = '违章图片'
+    image_data.short_description = '图片'
 
     list_display = ('illegalDate', 'illegalAttribute', 'illegalCode', 'illegalDesc', 'illegalMan', 'resDept',
-                    'resGroup', 'handle', 'resMoney', 'allRes', 'checkMan', 'bakMsg')
+                    'resGroup', 'handle', 'resMoney', 'allRes', 'checkMan', 'bakMsg', 'image_data')
+    readonly_fields = ('image_data',)
     inlines = (IllegalImageInfo, )
-
-    def get_search_results(self, request, queryset, search_term):
-        queryset, use_distinct = super().get_search_results(request, queryset, search_term)
-        queryset &= self.model.objects.filter(isDelete=False)
-        return queryset, use_distinct
+    actions = [export_to_csv]
 
 
 class TruckBodyPrjAdmin(admin.ModelAdmin):
-    list_display = ('code', 'bodyType', 'weight', 'truckCompany', 'basMes')
+
+    # def showCompany(self, param):
+    #     list = pl_guests.objects.filter(GUESTCODE=param.truckCompany)
+    #     return list[0].CNAME if len(list) > 0 else ''
+    #
+    # showCompany.short_description = '所属外拖公司'
+
+    list_display = ('code', 'bodyType', 'weight', 'cnameCompany', 'basMes')
+    search_fields = ('code', 'bodyType', 'cnameCompany', 'weight', 'basMes', )
+    list_filter = ('bodyType', 'cnameCompany')
 
     def my_syn(self, request, queryset):
-        print('mysyn')
+        if len(queryset) != 1:
+            self.message_user(request, '请选择"CTOS同步"记录进行数据同步', level=messages.ERROR)
+            return
+        if queryset[0].code != 'SYN':
+            self.message_user(request, '请选择"CTOS同步"记录进行数据同步', level=messages.ERROR)
+            return
+        list1 = er_truckbody_prj.objects.all()
+        list2 = TruckBodyPrj.objects.all()
+        count = 0
+        for tmp in list1:
+            update = False
+            code = tmp.TRUCKBODYCODE_PRJ
+            for tmp2 in list2:
+                if code == tmp2.code:
+                    update = True
+                    tmp2.bodyType = tmp.TRUCKBODYTYPECODE_PRJ
+                    tmp2.weight = tmp.WEIGHT_PRJ
+                    tmp2.truckCompany = tmp.TRUCKCOMPANY_PRJ
+                    tmp2.basMes = tmp.MEMO_PRJ
+                    tmp2.save()
+                    count += 1
+                    break
+            if update is False:
+                q = TruckBodyPrj(code=tmp.TRUCKBODYCODE_PRJ, bodyType=tmp.TRUCKBODYTYPECODE_PRJ, weight=tmp.WEIGHT_PRJ,
+                                 truckCompany=tmp.TRUCKCOMPANY_PRJ, basMes=tmp.MEMO_PRJ)
+                q.save()
+                count += 1
+        list2 = TruckBodyPrj.objects.all()
+        for tmp2 in list2:
+            guest = pl_guests.objects.filter(GUESTCODE=tmp2.truckCompany)
+            if len(guest) > 0:
+                tmp2.cnameCompany = guest[0].CNAME
+                tmp2.save()
+        self.message_user(request, '已同步%d条数据' % count)
 
     my_syn.short_description = "同步CTOS数据"
 
-    actions = ['my_syn']
+    actions = [export_to_csv, my_syn]
+    ordering = ('-cnameCompany',)
+    list_per_page = 15
+
+    def delete_queryset(self, request, queryset):
+        for tmp in queryset:
+            if tmp.code == 'SYN':
+                self.message_user(request, '不能删除用于"CTOS同步"的记录', level=messages.ERROR)
+                return
+        super().delete_queryset(request, queryset)
 
 
 class ViolationCodeAdmin(admin.ModelAdmin):
-    list_display = ('code', 'penalty', 'content', 'is_penalty')
+
+    def myContent(self, param):
+        if param.code == 'SYN':
+            return format_html('<b style="color: green;">{}</b>', param.content)
+        else:
+            return param.content
+
+    myContent.short_description = '违章内容'
+
+    list_display = ('code', 'penalty', 'myContent', 'is_penalty')
+    ordering = ('vid',)
 
     def my_syn(self, request, queryset):
-        print('mysyn')
+        if len(queryset) != 1:
+            self.message_user(request, '请选择"CTOS同步"记录进行数据同步', level=messages.ERROR)
+            return
+        if queryset[0].code != 'SYN':
+            self.message_user(request, '请选择"CTOS同步"记录进行数据同步', level=messages.ERROR)
+            return
+        list1 = er_violationcode.objects.all()
+        list2 = ViolationCode.objects.all()
+        count = 0
+        for tmp in list1:
+            update = False
+            vid = tmp.VIOLATIONCODEID
+            for tmp2 in list2:
+                if vid == tmp2.vid:
+                    update = True
+                    tmp2.code = tmp.VIOLATIONCODE
+                    tmp2.penalty = tmp.PENALTY
+                    tmp2.content = tmp.CONTENT
+                    tmp2.is_penalty = True if tmp.ISPENALTY == 'Y' else False
+                    tmp2.save()
+                    count += 1
+                    break
+            if update is False:
+                q = ViolationCode(vid=tmp.VIOLATIONCODEID, code=tmp.VIOLATIONCODE, penalty=tmp.PENALTY,
+                                  content=tmp.CONTENT)
+                q.is_penalty = True if tmp.ISPENALTY == 'Y' else False
+                q.save()
+                count += 1
+        self.message_user(request, '已同步%d条数据' % count)
 
     my_syn.short_description = "同步CTOS数据"
-    actions = ['my_syn']
+    actions = [export_to_csv, my_syn]
+
+    def delete_queryset(self, request, queryset):
+        for tmp in queryset:
+            if tmp.code == 'SYN':
+                self.message_user(request, '不能删除用于"CTOS同步"的记录', level=messages.ERROR)
+                return
+        super().delete_queryset(request, queryset)
 
 
 class TruckAdmin(admin.ModelAdmin):
 
     def show_name(self, param):
-        return param.driver.driverName
+        return param.driver.driverName if param is not None and param.driver is not None else ''
 
     def show_phone(self, param):
-        return param.driver.telPhone
+        return param.driver.telPhone if param is not None and param.driver is not None else ''
 
     show_name.short_description = '司机姓名'
     show_phone.short_description = '司机电话'
 
-    list_display = ('realTruck', 'truckNO', 'owner', 'isLock', 'weight', 'pcc', 'company',
-                    'basMes', 'truckType', 'fileNO', 'isZX', 'regDate', 'checkDate', 'tranNO',
-                    'insuranceNO', 'show_name', 'show_phone', 'createMan', 'createTime', 'updateMan', 'updateTime')
+    list_display = ('realTruck', 'truckNO', 'owner', 'isPCC', 'isLock', 'weight', 'pcc', 'company',
+                    'truckType', 'fileNO', 'isZX', 'regDate', 'checkDate', 'tranNO',
+                    'insuranceNO', 'show_name', 'show_phone', 'createManCName', 'createTime', 'updateManCName',
+                    'updateTime', 'basMes', )
+
+    list_per_page = 15
+
+    ordering = ('realTruck',)
+    search_fields = ('realTruck', 'truckNO', 'company', 'regDate', 'owner', 'pcc', 'insuranceNO', 'fileNO', 'tranNO')
+    list_filter = ('company', 'isLock', 'isZX', 'isPCC')
 
     def my_syn(self, request, queryset):
-        print('mysyn')
+        if len(queryset) != 1:
+            self.message_user(request, '请选择"CTOS同步"记录进行数据同步', level=messages.ERROR)
+            return
+
+        if queryset[0].realTruck != 'SYN':
+            self.message_user(request, '请选择"CTOS同步"记录进行数据同步', level=messages.ERROR)
+            return
+        list1 = er_truck.objects.filter(ISPCC='Y')
+        list2 = Truck.objects.all()
+        count = 0
+        for tmp in list1:
+            update = False
+            truckid = tmp.truckid
+            for tmp2 in list2:
+                if truckid == tmp2.truckID:
+                    update = True
+                    tmp2.realTruck = tmp.REALTRUCKN
+                    tmp2.truckNO = tmp.TRAILNO
+                    tmp2.owner = tmp.TRUCKOWNER
+                    tmp2.isLock = True if tmp.ISLOCK == 'Y' else False
+                    tmp2.weight = tmp.truckheadweight
+                    tmp2.isPCC = True if tmp.ISPCC else False
+
+                    tmp2.pcc = tmp.PCCNO
+                    tmp2.companyCode = tmp.TRUCKCOMPANYCODE
+                    tmp2.basMes = tmp.REMARK
+                    tmp2.createMan = tmp.CREATER
+                    tmp2.createTime = tmp.CREATETIME
+                    tmp2.updateMan = tmp.LASTUPDATEMAN
+                    tmp2.updateTime = tmp.LASTUPDATETIME
+
+                    tmp2.save()
+                    count += 1
+                    break
+            if update is False:
+                q = Truck(truckID=tmp.truckid, realTruck=tmp.REALTRUCKNO, truckNO=tmp.TRAILNO, owner=tmp.TRUCKOWNER,
+                          isLock=True if tmp.ISLOCK == 'Y' else False, weight=tmp.truckheadweight, pcc=tmp.PCCNO,
+                          companyCode=tmp.TRUCKCOMPANYCODE, basMes=tmp.REMARK, createMan=tmp.CREATER,
+                          createTime=tmp.CREATETIME, updateMan=tmp.LASTUPDATEMAN, updateTime=tmp.LASTUPDATETIME,
+                          isPCC=True if tmp.ISPCC else False)
+
+                q.createManCName = tmp.CREATER
+                q.updateManCName = tmp.LASTUPDATEMAN
+                q.save()
+                count += 1
+        list2 = Truck.objects.all()
+        d = {'': ''}
+        pguest = {'': ''}
+        for tmp2 in list2:
+            if d.get(tmp2.createMan) is not None:
+                tmp2.createManCName = d[tmp2.createMan]
+            else:
+                u1 = pl_user.objects.filter(US_LOGID=tmp2.createMan)
+                if len(u1) > 0:
+                    tmp2.createManCName = u1[0].US_NAME
+                    d[tmp2.createMan] = u1[0].US_NAME
+
+            if d.get(tmp2.updateMan) is not None:
+                tmp2.updateManCName = d[tmp2.updateMan]
+            else:
+                u1 = pl_user.objects.filter(US_LOGID=tmp2.updateMan)
+                if len(u1) > 0:
+                    tmp2.updateManCName = u1[0].US_NAME
+                    d[tmp2.updateMan] = u1[0].US_NAME
+
+            if pguest.get(tmp2.companyCode) is not None:
+                tmp2.company = pguest[tmp2.companyCode]
+            else:
+                pu = pl_guests.objects.filter(GUESTCODE=tmp2.companyCode)
+                if len(pu) > 0:
+                    tmp2.company = pu[0].CNAME
+                    pguest[tmp2.companyCode] = pu[0].CNAME
+
+            tmp2.save()
+        self.message_user(request, '已同步%d条数据' % count)
+
+    def delete_queryset(self, request, queryset):
+        for tmp in queryset:
+            if tmp.realTruck == 'SYN':
+                self.message_user(request, '不能删除用于"CTOS同步"的记录', level=messages.ERROR)
+                return
+        super().delete_queryset(request, queryset)
 
     my_syn.short_description = "同步CTOS数据"
-    actions = ['my_syn']
+    actions = [export_to_csv, my_syn]
 
 
 class TruckIllegalAdmin(admin.ModelAdmin):
 
     list_display = ('illegalTime', 'code', 'truck', 'driverName', 'status', 'desc',
                     'lockStartTime', 'lockEndTime', 'checkMan')
+
+    autocomplete_fields = ['truck']
+    actions = [export_to_csv]
 
 
 admin.site.site_header = '安保信息系统'
